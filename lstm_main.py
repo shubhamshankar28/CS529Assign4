@@ -16,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from BERTopic_training import train_and_create
 from gen_embeddings import create_embeddings
+from generateMatrices import generateInputMatrix
 import  pickle
 
 
@@ -221,8 +222,13 @@ if(mode == 0):
     full_set= data_set[:1000]
     newser = full_set['articleBody'] + full_set['Headline']
     train_set,test_set = train_test_split(full_set,test_size = 0.2)
+    #
+    # print(train_set.shape)
+    # print(train_set.loc[0,'Headline'])
     model = train_and_create(newser)
-    X_train,y_train,X_test,y_test = create_embeddings(model,newser,train_set,test_set,12,300)
+    topic2word,doc2topic,embedding_dict,word2index = create_embeddings(model,newser,train_set,test_set,12,300)
+    generateInputMatrix(topic2word,embedding_dict,word2index,train_set,12,300,"trainingSet",size = 400)
+
 else:
     print("using alternate mode of retrieval")
     X_train = pickle.load(open("training_inp","rb" ))
@@ -230,28 +236,28 @@ else:
     X_test = pickle.load(open("testing_inp" , "rb"))
     y_test = pickle.load(open("testing_target" , "rb"))
 
-
-
-batch_size = 32
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-train_ds = TensorDataset(X_train,y_train)
-test_ds = TensorDataset(X_test,y_test)
-train_dl = DataLoader(train_ds, shuffle=True, batch_size=batch_size, drop_last=True)
-test_dl = DataLoader(test_ds, shuffle=True, batch_size=batch_size, drop_last=True)
-
-
-# In[32]:
-
-
-model = FNC_BERTopicModel(X_test.shape[2],12,300,70,15)
-model.to(device)
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr = 3e-4)
-
-
-train_and_test(FNC_BERTopicModel(X_test.shape[2],12,300,70,15) , "FNC_Bert_no_dot" , device)
+#
+#
+# batch_size = 32
+#
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#
+# train_ds = TensorDataset(X_train,y_train)
+# test_ds = TensorDataset(X_test,y_test)
+# train_dl = DataLoader(train_ds, shuffle=True, batch_size=batch_size, drop_last=True)
+# test_dl = DataLoader(test_ds, shuffle=True, batch_size=batch_size, drop_last=True)
+#
+#
+# # In[32]:
+#
+#
+# model = FNC_BERTopicModel(X_test.shape[2],12,300,70,15)
+# model.to(device)
+# criterion = nn.CrossEntropyLoss()
+# optimizer = torch.optim.Adam(model.parameters(), lr = 3e-4)
+#
+#
+# train_and_test(FNC_BERTopicModel(X_test.shape[2],12,300,70,15) , "FNC_Bert_no_dot" , device)
 
 # In[33]:
 
